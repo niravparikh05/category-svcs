@@ -2,16 +2,19 @@ This is a microservice application for advisor categories.
 
 Prerequisites
 1) Mongodb server running with below database and collection
-database: finman-db
+
+database: finman-db\
 collection: category 
 
 2) this requires PMS_CONFIG environment variable set with the complete filepath having below properties
-mongodb.host: <host>
-mongodb.port: <port> defaults to 27017
-mongodb.username: <username>
-mongodb.password: <password>
+
+mongodb.host: <host> \
+mongodb.port: <port> defaults to 27017 \
+mongodb.username: <username> \
+mongodb.password: <password> 
 
 Sample Document
+```json
 {
     "_id": "1",
     "type": "fee-only",
@@ -45,12 +48,18 @@ Sample Document
         }
     ]
 }
+```
 
 Application has below rest endpoints
 
-GET /api/category => this gets all the advisor categories
-GET /api/category/{id} => this gets the category for given id
-POST /api/category => this creates a new advisor category
-PUT /api/category/{id} => this updates the category for given id
-DELETE /api/category/{id} => this deletes the category for given id
+GET   /api/category  \
+    => this gets all the advisor categories \
+GET   /api/category/{id} \
+    => this gets the category for given id \
+POST  /api/category \
+    => this creates a new advisor category \
+PUT   /api/category/{id} \
+    => this updates the category for given id \
+DELETE /api/category/{id} \
+    => this deletes the category for given id
 
