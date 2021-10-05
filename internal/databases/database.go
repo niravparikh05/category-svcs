@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/magiconair/properties"
-	"github.com/niravparikh05/category-svcs/category"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -39,6 +40,10 @@ type Mongodb struct {
 * Returns: Reference to Mongodb instance which has database properties
  */
 func ReadDatabaseProps(filepath string) (*Mongodb, error) {
+	if len(filepath) == 0 {
+		log.Println("invalid database properties filepath ", filepath)
+		return &Mongodb{}, fmt.Errorf("invalid database properties filepath %s", filepath)
+	}
 	prop := properties.MustLoadFile(filepath, properties.UTF8)
 	mongodb := &Mongodb{}
 	err := prop.Decode(mongodb)
@@ -48,6 +53,17 @@ func ReadDatabaseProps(filepath string) (*Mongodb, error) {
 	mongodb.Password = string(decodedPassword)
 	mongodb.connstring = mongodb.connectionString()
 	return mongodb, err
+}
+
+func ReadDatabasePropsFromEnv() *Mongodb {
+	fmt.Println("Trying from environment variables ..")
+	mongodb := &Mongodb{}
+	mongodb.Host = os.Getenv("mongodb_host")
+	mongodb.Port, _ = strconv.Atoi(os.Getenv("mongodb_port"))
+	mongodb.Username = os.Getenv("mongodb_username")
+	mongodb.Password = os.Getenv("mongodb_password")
+	mongodb.connstring = mongodb.connectionString()
+	return mongodb
 }
 
 func (mongodb *Mongodb) connectionString() string {
@@ -148,7 +164,7 @@ func (mongodb *Mongodb) GetCategoryById(writer http.ResponseWriter, request *htt
 	}
 	log.Println("Fetching category for id ", id)
 	result := mongodb.findOne("category", id)
-	categoryObj := &category.Category{}
+	categoryObj := &Category{}
 	err := result.Decode(categoryObj)
 	if err != nil {
 		log.Printf("Error fetching document from database %s\n", err.Error())
@@ -165,10 +181,10 @@ func (mongodb *Mongodb) GetAllCategories(writer http.ResponseWriter, request *ht
 		panic(err)
 	}
 	log.Println("Fetching all categories ")
-	categories := []category.Category{}
+	categories := []Category{}
 	ctx := context.Background()
 	for results.Next(ctx) {
-		category := &category.Category{}
+		category := &Category{}
 		results.Decode(category)
 		categories = append(categories, *category)
 	}
@@ -176,7 +192,7 @@ func (mongodb *Mongodb) GetAllCategories(writer http.ResponseWriter, request *ht
 }
 
 func (mongodb *Mongodb) CreateCategory(writer http.ResponseWriter, request *http.Request) {
-	category := category.Category{}
+	category := Category{}
 	json.NewDecoder(request.Body).Decode(&category)
 	id := mongodb.insertOne("category", category)
 	log.Println("Successfully created new category, id is ", id)
@@ -190,7 +206,7 @@ func (mongodb *Mongodb) UpdateCategory(writer http.ResponseWriter, request *http
 		http.Error(writer, "missing / invalid document id", http.StatusBadRequest)
 		return
 	}
-	category := category.Category{}
+	category := Category{}
 	json.NewDecoder(request.Body).Decode(&category)
 	updResult := mongodb.updateOne("category", id, category)
 	log.Println("Successfully updated category for id ", id, " impacted documents: ", updResult.ModifiedCount)

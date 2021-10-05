@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
+	"internal/databases"
+
 	"github.com/gorilla/mux"
-	"github.com/niravparikh05/category-svcs/databases"
 )
 
 const (
@@ -22,8 +22,7 @@ func main() {
 	//read properties to connect to mongo db
 	dbprops, err := databases.ReadDatabaseProps(os.Getenv("PMS_CONFIG"))
 	if err != nil {
-		log.Fatalln("Error while reading database properties ", err.Error())
-		panic(err)
+		dbprops = databases.ReadDatabasePropsFromEnv()
 	}
 
 	router := mux.NewRouter()

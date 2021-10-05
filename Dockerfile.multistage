@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+##
+## Build
+##
+FROM golang:1.17-buster AS build
+
+WORKDIR /app
+
+COPY internal/databases/go.mod ./internal/databases/go.mod
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
+
+COPY *.go ./
+COPY internal/databases/*.go ./internal/databases/
+
+RUN go build -o ./category-svcs
+
+##
+## Deploy
+##
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=build /app/category-svcs ./
+EXPOSE 8080
+CMD ["/app/category-svcs"]
